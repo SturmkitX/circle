@@ -5,6 +5,7 @@
 #include <circle/serial.h>
 #include <circle/fs/fat/fatfs.h>
 #include <circle/bcmframebuffer.h>
+#include <circle/input/keymap.h>
 
 class CDoom {
 public:
@@ -13,6 +14,7 @@ public:
 
     boolean InitDoom();
     void Update();
+    static void InterpretKeyboard(unsigned char, const unsigned char[], CKeyMap *);
 };
 
 #endif

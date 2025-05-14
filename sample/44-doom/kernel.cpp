@@ -25,6 +25,7 @@
 
 // #include "fdlibm/fdlibm.h"
 #include <math.h>
+#include <circle/input/keymap.h>
 
 #include "doom.h"
 
@@ -33,10 +34,13 @@
 
 static const char FromKernel[] = "kernel";
 static CSerialDevice* p_Serial;
+static CDoom *p_Doom;
+
+static CKeyMap m_KeyMap;
 
 CKernel::CKernel (void)
-// :	m_Screen (m_Options.GetWidth (), m_Options.GetHeight ()),
-:	m_Screen (320, 200),
+:	m_Screen (m_Options.GetWidth (), m_Options.GetHeight ()),
+// :	m_Screen (320, 200),
 	m_Timer (&m_Interrupt),
 	m_Logger (m_Options.GetLogLevel (), &m_Timer),
 	m_USBHCI (&m_Interrupt, &m_Timer, TRUE),		// TRUE: enable plug-and-play
@@ -137,6 +141,7 @@ TShutdownMode CKernel::Run (void)
 	m_Screen.Write ((const char *) Message3, Message3.GetLength ());
 
 	CDoom doom(&m_Serial, &m_FileSystem, m_Screen.GetFrameBuffer());
+	p_Doom = &doom;
 	
 	boolean res = doom.InitDoom();
 
@@ -273,6 +278,8 @@ void CKernel::KeyStatusHandlerRaw (unsigned char ucModifiers, const unsigned cha
 	CString str;
 	str.Format("Got RAW Key status: %x %x %x %x %x %x\n", RawKeys[0], RawKeys[1], RawKeys[2], RawKeys[3], RawKeys[4], RawKeys[5]);
 	p_Serial->Write(str, strlen(str));
+
+	p_Doom->InterpretKeyboard(ucModifiers, RawKeys, &m_KeyMap);
 }
 
 void CKernel::KeyboardRemovedHandler (CDevice *pDevice, void *pContext) {

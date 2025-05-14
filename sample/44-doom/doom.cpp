@@ -15,6 +15,9 @@ char *doomContent;
 int doomSeek = 0;
 int doomContentSize = 4196020;  // doom wad size
 
+u8 keyCodesLast[128];
+u8 keyCodesCurr[128];
+
 void doom_print_fn_impl(const char* str) {
     p_Serial->Write(str, strlen(str));
 }
@@ -265,20 +268,20 @@ void CDoom::Update() {
     while (1) {
         curr_time = CTimer::GetClockTicks64();
         doom_update();
-        char kbuf = 0;
-        char lastPressed = 0;
-        int serialRead = 0;
+        // char kbuf = 0;
+        // char lastPressed = 0;
+        // int serialRead = 0;
 
-        serialRead = p_Serial->Read(&kbuf, 1);
-        if (serialRead > 0) {
-            if (kbuf != lastPressed) {
-                doom_key_down((doom_key_t)kbuf);
-                lastPressed = kbuf;
-            }
-        } else if (lastPressed != 0) {
-            doom_key_up((doom_key_t)lastPressed);
-            lastPressed = 0;
-        }
+        // serialRead = p_Serial->Read(&kbuf, 1);
+        // if (serialRead > 0) {
+        //     if (kbuf != lastPressed) {
+        //         doom_key_down((doom_key_t)kbuf);
+        //         lastPressed = kbuf;
+        //     }
+        // } else if (lastPressed != 0) {
+        //     doom_key_up((doom_key_t)lastPressed);
+        //     lastPressed = 0;
+        // }
 
         if ((curr_time - start_time) % delayTime == 0) {
             const u8* framebuffer = doom_get_framebuffer(4 /* RGBA */);
@@ -290,7 +293,10 @@ void CDoom::Update() {
             unsigned int* fbp = (unsigned int*)framebuffer;
             for (int y=0; y < 200; y++) {
                 for (int x=0; x < 320; x++) {
-                    p_FrameBuffer->SetPixel(x, y, *fbp);
+                    p_FrameBuffer->SetPixel((x << 1), (y << 1), *fbp);
+                    p_FrameBuffer->SetPixel((x << 1) | 1, (y << 1), *fbp);
+                    p_FrameBuffer->SetPixel((x << 1), (y << 1) | 1, *fbp);
+                    p_FrameBuffer->SetPixel((x << 1) | 1, (y << 1) | 1, *fbp);
                     fbp++;
                 }
             }
@@ -302,5 +308,45 @@ void CDoom::Update() {
             // str.Format("Finished displaying the framebuffer\n");
             // p_Serial->Write(str, strlen(str));
         }
+    }
+}
+
+void CDoom::InterpretKeyboard(unsigned char ucModifiers, const unsigned char RawKeys[6], CKeyMap *keyMap) {
+    // modifiers are not taken into consideration
+    memset(keyCodesCurr, 0, 128);
+
+    for (int i=0; i < 6; i++) {
+        keyCodesCurr[RawKeys[i]] = 1;
+    }
+
+    CString str;
+    
+    for (int i=0; i < 128; i++) {
+        if (keyCodesCurr[i] == 1 && keyCodesLast[i] == 0) {
+            // key down
+            u16 code = keyMap->Translate(i, 0);
+
+            if (code == 260) {
+                // ENTER
+                doom_key_down(DOOM_KEY_ENTER);
+            } else {
+                doom_key_down((doom_key_t)code);
+            }
+            
+            str.Format("Key down: %u\n", code);
+            p_Serial->Write(str, strlen(str));
+        } else if (keyCodesCurr[i] == 0 && keyCodesLast[i] == 1) {
+            u16 code = keyMap->Translate(i, 0);
+            if (code == 260) {
+                // ENTER
+                doom_key_up(DOOM_KEY_ENTER);
+            } else {
+                doom_key_up((doom_key_t)code);
+            }
+            str.Format("Key up: %u\n", code);
+            p_Serial->Write(str, strlen(str));
+        }
+
+        keyCodesLast[i] = keyCodesCurr[i];
     }
 }
