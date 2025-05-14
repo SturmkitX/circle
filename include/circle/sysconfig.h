@@ -155,7 +155,7 @@
 // single core applications, because this may slow down the system
 // because multiple cores may compete for bus time without use.
 
-//#define ARM_ALLOW_MULTI_CORE
+#define ARM_ALLOW_MULTI_CORE
 
 #endif
 
@@ -222,9 +222,9 @@
 // USB plug-and-play operation this option must be set in any case.
 // This option has no influence on the Raspberry Pi 4 and 5.
 
-#ifndef NO_USB_SOF_INTR
+// #ifndef NO_USB_SOF_INTR
 #define USE_USB_SOF_INTR
-#endif
+// #endif
 
 // USE_USB_FIQ makes the USB timing more accurate, by using the FIQ to
 // handle time-critical interrupts from the USB controller, which are
@@ -301,13 +301,13 @@
 
 #ifndef DEFAULT_KEYMAP
 
-#define DEFAULT_KEYMAP		"DE"
+// #define DEFAULT_KEYMAP		"DE"
 //#define DEFAULT_KEYMAP		"DV"	// Dvorak layout
 //#define DEFAULT_KEYMAP		"ES"
 //#define DEFAULT_KEYMAP		"FR"
 //#define DEFAULT_KEYMAP		"IT"
 //#define DEFAULT_KEYMAP		"UK"
-//#define DEFAULT_KEYMAP		"US"
+#define DEFAULT_KEYMAP		"US"
 
 #endif
 

@@ -154,6 +154,10 @@ public:
 	*/
 	int FileDelete (const char *pTitle);
 
+	int	FileSeek(unsigned hFile, unsigned offset, unsigned origin);
+	int FileTell(unsigned hFile);
+	int FileEOF(unsigned hFile);
+
 private:
 	CFATCache	m_Cache;
 	CFATInfo	m_FATInfo;

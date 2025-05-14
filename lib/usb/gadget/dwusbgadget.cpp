@@ -88,7 +88,7 @@ boolean CDWUSBGadget::Initialize (boolean bScanDevices)
 	PeripheralEntry ();
 
 	CDWHCIRegister VendorId (DWHCI_CORE_VENDOR_ID);
-	if (VendorId.Read () != 0x4F54280A)
+	if (VendorId.Read () != 0x4F54280A && VendorId.Read() != 0x4F54294A)	// may need to build the custom QEMU version
 	{
 		LOGERR ("Unknown vendor 0x%0X", VendorId.Get ());
 		return FALSE;

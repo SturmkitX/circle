@@ -151,7 +151,7 @@ boolean CDWHCIDevice::Initialize (boolean bScanDevices)
 	assert (m_pTimer != 0);
 
 	CDWHCIRegister VendorId (DWHCI_CORE_VENDOR_ID);
-	if (VendorId.Read () != 0x4F54280A)
+	if (VendorId.Read () != 0x4F54280A && VendorId.Read() != 0x4F54294A)
 	{
 		LOGERR ("Unknown vendor 0x%0X", VendorId.Get ());
 		return FALSE;

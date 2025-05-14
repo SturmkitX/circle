@@ -477,3 +477,26 @@ int CFATFileSystem::FileDelete (const char *pTitle)
 
 	return 1;
 }
+
+int	CFATFileSystem::FileSeek(unsigned hFile, unsigned offset, unsigned origin) {
+    TFile *pFile = &FILE (hFile);
+
+    switch (origin) {
+        case 0: pFile->nOffset = offset; break;
+        case 1: pFile->nOffset += offset; break;
+        default: pFile->nOffset = pFile->nSize + offset;
+    }
+
+    // return pFile->nOffset;
+	return 0;	// 0 on success
+}
+
+int CFATFileSystem::FileTell(unsigned hFile) {
+    TFile *pFile = &FILE (hFile);
+    return (pFile->nOffset);
+}
+
+int CFATFileSystem::FileEOF(unsigned hFile) {
+    TFile *pFile = &FILE (hFile);
+    return (pFile->nOffset >= pFile->nSize);
+}

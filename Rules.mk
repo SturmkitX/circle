@@ -28,11 +28,11 @@ CIRCLEHOME ?= ..
 # set this to 1 to build with clang (experimental)
 CLANG	 ?= 0
 
-AARCH	 ?= 32
-RASPPI	 ?= 1
+AARCH	 ?= 64
+RASPPI	 ?= 3
 
 PREFIX	 ?= arm-none-eabi-
-PREFIX64 ?= aarch64-none-elf-
+PREFIX64 ?= ..\..\..\arm-gnu-toolchain-13.2.Rel1\bin\aarch64-none-elf-
 
 # see: doc/stdlib-support.txt
 ifneq ($(strip $(CLANG)),1)
