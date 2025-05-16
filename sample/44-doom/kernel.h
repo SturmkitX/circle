@@ -37,6 +37,7 @@
 #include <SDCard/emmc.h>
 #include <circle/sound/soundbasedevice.h>
 #include <vc4/vchiq/vchiqdevice.h>
+#include <circle/sched/scheduler.h>
 
 enum TShutdownMode
 {
@@ -75,6 +76,7 @@ private:
 	CFATFileSystem		m_FileSystem;
 	CVCHIQDevice		m_VCHIQ;
 	CSoundBaseDevice	*m_pSound;
+	CScheduler		m_Scheduler;
 
 	void InitSD();
 	void InitUSB();

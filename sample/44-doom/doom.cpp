@@ -1,5 +1,4 @@
 #define DOOM_IMPLEMENTATION
-#include "PureDOOM/src/DOOM/DOOM.h"
 #include "doom.h"
 
 #include <stdlib.h>
@@ -10,6 +9,8 @@
 CSerialDevice *p_Serial;
 CFATFileSystem *p_FileSystem;
 CBcmFrameBuffer *p_FrameBuffer;
+CSoundBaseDevice	*p_Sound;
+CScheduler  *p_Scheduler;
 
 char *doomContent;
 int doomSeek = 0;
@@ -199,10 +200,12 @@ char* doom_getenv_fn_impl(const char* var) {
 }
 
 
-CDoom::CDoom(CSerialDevice* serial, CFATFileSystem* fatfs, CBcmFrameBuffer* fb) {
+CDoom::CDoom(CSerialDevice* serial, CFATFileSystem* fatfs, CBcmFrameBuffer* fb, CSoundBaseDevice *m_pSound, CScheduler* sched) {
     p_Serial = serial;
     p_FileSystem = fatfs;
     p_FrameBuffer = fb;
+    p_Sound = m_pSound;
+    p_Scheduler = sched;
 }
 
 CDoom::~CDoom() {
@@ -258,46 +261,25 @@ boolean CDoom::InitDoom() {
 }
 
 void CDoom::Update() {
-    u64 start_time, curr_time;
+    u64 render_time, sound_time, curr_time;
 
     // render the game at 25fps
-    unsigned int delayTime = 1000000 / 25;
-    start_time = CTimer::GetClockTicks64();
+    unsigned int renderDelayTime = 1000000 / 25;
+    unsigned int soundDelayTime = 100000;
+
+    render_time = sound_time = CTimer::GetClockTicks64();
     CString str;
 
     while (1) {
         curr_time = CTimer::GetClockTicks64();
         doom_update();
-        // char kbuf = 0;
-        // char lastPressed = 0;
-        // int serialRead = 0;
 
-        // serialRead = p_Serial->Read(&kbuf, 1);
-        // if (serialRead > 0) {
-        //     if (kbuf != lastPressed) {
-        //         doom_key_down((doom_key_t)kbuf);
-        //         lastPressed = kbuf;
-        //     }
-        // } else if (lastPressed != 0) {
-        //     doom_key_up((doom_key_t)lastPressed);
-        //     lastPressed = 0;
-        // }
-
-        if ((curr_time - start_time) % delayTime == 0) {
+        if ((curr_time - render_time) >= renderDelayTime) {
             const u8* framebuffer = doom_get_framebuffer(4 /* RGBA */);
             
-            // str.Format("Before SetArea\n");
-            // // p_Serial->Write(str, strlen(str));
-
-            // p_FrameBuffer->SetArea(area, framebuffer);
             unsigned int* fbp = (unsigned int*)framebuffer;
             for (int y=0; y < 200; y++) {
                 for (int x=0; x < 320; x++) {
-                    // p_FrameBuffer->SetPixel((x << 1), (y << 1), *fbp);
-                    // p_FrameBuffer->SetPixel((x << 1) | 1, (y << 1), *fbp);
-                    // p_FrameBuffer->SetPixel((x << 1), (y << 1) | 1, *fbp);
-                    // p_FrameBuffer->SetPixel((x << 1) | 1, (y << 1) | 1, *fbp);
-
                     // read hardware has some framebuffer issues ???
                     // upscaling does not work
                     // and it uses BGRA instead of RGBA
@@ -310,13 +292,26 @@ void CDoom::Update() {
                     p_FrameBuffer->SetPixel(x, y, pixel);
                 }
             }
-            // p_FrameBuffer->SetPixel(0, 0, *(unsigned int*)framebuffer);
-
-            // str.Format("After SetArea\n");
-            // // p_Serial->Write(str, strlen(str));
             
-            // str.Format("Finished displaying the framebuffer\n");
-            // // p_Serial->Write(str, strlen(str));
+            render_time = curr_time;
+        }
+
+        if (curr_time - sound_time >= soundDelayTime) {
+            short* buffer = doom_get_sound_buffer();
+            unsigned nQueueSizeFrames = p_Sound->GetQueueSizeFrames ();
+
+            // output sound data
+            // for (unsigned nCount = 0; p_Sound->IsActive (); nCount++)
+            // {
+            //     p_Scheduler->MsSleep (QUEUE_SIZE_MSECS / 2);
+
+            //     // fill the whole queue free space with data
+            //     WriteSoundData (buffer, nQueueSizeFrames - p_Sound->GetQueueFramesAvail ());
+
+            //     // m_Screen.Rotor (0, nCount);
+            // }
+            WriteSoundData (buffer, nQueueSizeFrames - p_Sound->GetQueueFramesAvail ());
+            sound_time = curr_time;
         }
     }
 }
@@ -359,4 +354,25 @@ void CDoom::InterpretKeyboard(unsigned char ucModifiers, const unsigned char Raw
 
         keyCodesLast[i] = keyCodesCurr[i];
     }
+}
+
+void CDoom::WriteSoundData (short* buffer, unsigned nFrames)
+{
+	const unsigned nFramesPerWrite = 1000;
+
+	while (nFrames > 0)
+	{
+		unsigned nWriteFrames = nFrames < nFramesPerWrite ? nFrames : nFramesPerWrite;
+		unsigned nWriteBytes = nWriteFrames * WRITE_CHANNELS * TYPE_SIZE;
+
+		int nResult = p_Sound->Write (buffer, nWriteBytes);
+		// if (nResult != (int) nWriteBytes)
+		// {
+		// 	m_Logger.Write (FromKernel, LogError, "Sound data dropped");
+		// }
+
+		nFrames -= nWriteFrames;
+
+		p_Scheduler->Yield ();		// ensure the VCHIQ tasks can run
+	}
 }

@@ -102,6 +102,11 @@ boolean CKernel::Initialize (void)
 	{
 		bOK = m_EMMC.Initialize ();
 	}
+
+	if (bOK)
+	{
+		bOK = m_VCHIQ.Initialize ();
+	}
 	
 	return bOK;
 }
@@ -111,6 +116,30 @@ TShutdownMode CKernel::Run (void)
 	m_Logger.Write (FromKernel, LogNotice, "Compile time: " __DATE__ " " __TIME__);
 
 	m_Logger.Write (FromKernel, LogNotice, "Please attach an USB keyboard, if not already done!");
+
+	m_pSound = new CVCHIQSoundBaseDevice (&m_VCHIQ, SAMPLE_RATE, CHUNK_SIZE,
+					(TVCHIQSoundDestination) m_Options.GetSoundOption ());
+
+	// configure sound device
+	if (!m_pSound->AllocateQueue (QUEUE_SIZE_MSECS))
+	{
+		m_Logger.Write (FromKernel, LogPanic, "Cannot allocate sound queue");
+	}
+
+	m_pSound->SetWriteFormat (FORMAT, WRITE_CHANNELS);
+
+	// initially fill the whole queue with data
+	// unsigned nQueueSizeFrames = m_pSound->GetQueueSizeFrames ();
+
+	// WriteSoundData (nQueueSizeFrames);
+
+	// start sound device
+	if (!m_pSound->Start ())
+	{
+		m_Logger.Write (FromKernel, LogPanic, "Cannot start sound device");
+	}
+
+	m_Logger.Write (FromKernel, LogNotice, "Playing DOOM Sounds");
 
 	// show the character set on screen
 	// for (char chChar = ' '; chChar <= '~'; chChar++)
@@ -146,7 +175,7 @@ TShutdownMode CKernel::Run (void)
 
 	boolean resize_status = m_Screen.Resize(320, 200);
 
-	CDoom doom(&m_Serial, &m_FileSystem, m_Screen.GetFrameBuffer());
+	CDoom doom(&m_Serial, &m_FileSystem, m_Screen.GetFrameBuffer(), m_pSound, &m_Scheduler);
 	p_Doom = &doom;
 	
 	boolean res = doom.InitDoom();
