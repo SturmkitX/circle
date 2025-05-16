@@ -29,6 +29,8 @@
 
 #include "doom.h"
 
+#include <vc4/sound/vchiqsoundbasedevice.h>
+
 #define PARTITION	"emmc1-1"
 #define FILENAME	"circle.txt"
 
@@ -45,7 +47,9 @@ CKernel::CKernel (void)
 	m_Logger (m_Options.GetLogLevel (), &m_Timer),
 	m_USBHCI (&m_Interrupt, &m_Timer, TRUE),		// TRUE: enable plug-and-play
 	m_pKeyboard (0),
-	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED)
+	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED),
+	m_VCHIQ (CMemorySystem::Get (), &m_Interrupt),
+	m_pSound (0)
 {
 	m_ActLED.Blink (5);	// show we are alive
 }
@@ -109,18 +113,18 @@ TShutdownMode CKernel::Run (void)
 	m_Logger.Write (FromKernel, LogNotice, "Please attach an USB keyboard, if not already done!");
 
 	// show the character set on screen
-	for (char chChar = ' '; chChar <= '~'; chChar++)
-	{
-		if (chChar % 8 == 0)
-		{
-			m_Screen.Write ("\n", 1);
-		}
+	// for (char chChar = ' '; chChar <= '~'; chChar++)
+	// {
+	// 	if (chChar % 8 == 0)
+	// 	{
+	// 		m_Screen.Write ("\n", 1);
+	// 	}
 
-		CString Message;
-		Message.Format ("%02X: \'\u001b[7m%c\u001b[0m\' ", (unsigned) chChar, chChar);
+	// 	CString Message;
+	// 	Message.Format ("%02X: \'\u001b[7m%c\u001b[0m\' ", (unsigned) chChar, chChar);
 		
-		m_Screen.Write ((const char *) Message, Message.GetLength ());
-	}
+	// 	m_Screen.Write ((const char *) Message, Message.GetLength ());
+	// }
 	m_Screen.Write ("\n", 1);
 
 	InitSD();
@@ -128,17 +132,19 @@ TShutdownMode CKernel::Run (void)
 
 #ifndef NDEBUG
 	// some debugging features
-	m_Logger.Write (FromKernel, LogDebug, "Dumping the start of the ATAGS");
-	debug_hexdump ((void *) 0x100, 128, FromKernel);
+	// m_Logger.Write (FromKernel, LogDebug, "Dumping the start of the ATAGS");
+	// debug_hexdump ((void *) 0x100, 128, FromKernel);
 
-	CString Message2;
-	Message2.Format ("Testing simple float print: %f\n", 5.2f);
-	m_Screen.Write ((const char *) Message2, Message2.GetLength ());
+	// CString Message2;
+	// Message2.Format ("Testing simple float print: %f\n", 5.2f);
+	// m_Screen.Write ((const char *) Message2, Message2.GetLength ());
 
-	float xx = (float)pow(2, 3);
-	CString Message3;
-	Message3.Format ("Testing pow(2,3): %f\n", sqrt(16));
-	m_Screen.Write ((const char *) Message3, Message3.GetLength ());
+	// float xx = (float)pow(2, 3);
+	// CString Message3;
+	// Message3.Format ("Testing pow(2,3): %f\n", sqrt(16));
+	// m_Screen.Write ((const char *) Message3, Message3.GetLength ());
+
+	boolean resize_status = m_Screen.Resize(320, 200);
 
 	CDoom doom(&m_Serial, &m_FileSystem, m_Screen.GetFrameBuffer());
 	p_Doom = &doom;
@@ -277,7 +283,7 @@ void CKernel::InitUSB() {
 void CKernel::KeyStatusHandlerRaw (unsigned char ucModifiers, const unsigned char RawKeys[6]) {
 	CString str;
 	str.Format("Got RAW Key status: %x %x %x %x %x %x\n", RawKeys[0], RawKeys[1], RawKeys[2], RawKeys[3], RawKeys[4], RawKeys[5]);
-	p_Serial->Write(str, strlen(str));
+	// p_Serial->Write(str, strlen(str));
 
 	p_Doom->InterpretKeyboard(ucModifiers, RawKeys, &m_KeyMap);
 }
@@ -285,5 +291,5 @@ void CKernel::KeyStatusHandlerRaw (unsigned char ucModifiers, const unsigned cha
 void CKernel::KeyboardRemovedHandler (CDevice *pDevice, void *pContext) {
 	CString str;
 	str.Format("Removed USB keyboard event\n");
-	p_Serial->Write(str, strlen(str));
+	// p_Serial->Write(str, strlen(str));
 }

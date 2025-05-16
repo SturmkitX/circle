@@ -19,7 +19,7 @@ u8 keyCodesLast[128];
 u8 keyCodesCurr[128];
 
 void doom_print_fn_impl(const char* str) {
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
 }
 
 void* doom_malloc_fn_impl(int size) {
@@ -33,13 +33,13 @@ void doom_free_fn_impl(void* ptr) {
 void* doom_open_fn_impl(const char* filename, const char* mode) {
     CString str;
     str.Format("DOOM now opening file %s with mode %s\n", filename, mode);
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
 
     // paths are prefixed with "./" (when env is empty, at least)
     unsigned int handle = p_FileSystem->FileOpen(filename + 2);   // Open only supports READ mode; WRITE replaces old files
 
     str.Format("FileOpen returned handle: %u\n", handle);
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
     return (void*)(unsigned long long)handle;
 }
 
@@ -47,31 +47,31 @@ void doom_close_fn_impl(void* handle) {
     unsigned nHandle = (unsigned int)(unsigned long long)handle;
     CString str;
     str.Format("DOOM now closing handle %u\n", nHandle);
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
 
     unsigned int status = p_FileSystem->FileClose(nHandle);
 
     str.Format("FileClose returned status: %u\n", status);
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
 }
 
 // int doom_read_fn_impl(void* handle, void *buf, int count) {
 //     unsigned nHandle = (unsigned int)(unsigned long long)handle;
 //     CString str;
 //     str.Format("DOOM now reading file handle %u\n", nHandle);
-//     p_Serial->Write(str, strlen(str));
+//     // p_Serial->Write(str, strlen(str));
 
 //     unsigned read = p_FileSystem->FileRead(nHandle, buf, count);
 
 //     str.Format("Read %u bytes\n", read);
-//     p_Serial->Write(str, strlen(str));
+//     // p_Serial->Write(str, strlen(str));
 
 //     str.Format("DOOM Position after read: %d\n", p_FileSystem->FileTell(nHandle));
-//     p_Serial->Write(str, strlen(str));
+//     // p_Serial->Write(str, strlen(str));
 
 //     char* cBuf = (char*)buf;
 //     str.Format("DOOM First 5 bytes read: %x %x %x %x %x\n", cBuf[0], cBuf[1], cBuf[2], cBuf[3], cBuf[4]);
-//     p_Serial->Write(str, strlen(str));
+//     // p_Serial->Write(str, strlen(str));
 //     return (int)read;
 // }
 
@@ -81,20 +81,20 @@ int doom_read_fn_impl(void* handle, void *buf, int count) {
 
     CString str;
     str.Format("DOOM now reading file handle %u\n", nHandle);
-    //p_Serial->Write(str, strlen(str));
+    //// p_Serial->Write(str, strlen(str));
 
     memcpy(buf, doomContent + doomSeek, count);
     doomSeek += count;
 
     str.Format("Read %u bytes\n", count);
-    //p_Serial->Write(str, strlen(str));
+    //// p_Serial->Write(str, strlen(str));
 
     str.Format("DOOM Position after read: %d\n", doomSeek);
-    //p_Serial->Write(str, strlen(str));
+    //// p_Serial->Write(str, strlen(str));
 
     char* cBuf = (char*)buf;
     str.Format("DOOM First 5 bytes read: %x %x %x %x %x\n", cBuf[0], cBuf[1], cBuf[2], cBuf[3], cBuf[4]);
-    //p_Serial->Write(str, strlen(str));
+    //// p_Serial->Write(str, strlen(str));
 
     return count;
 }
@@ -103,12 +103,12 @@ int doom_write_fn_impl(void* handle, const void *buf, int count) {
     unsigned nHandle = (unsigned int)(unsigned long long)handle;
     CString str;
     str.Format("DOOM now writing to file handle %u\n", nHandle);
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
 
     unsigned written = p_FileSystem->FileWrite(nHandle, buf, count);
 
     str.Format("Wrote %u bytes\n", written);
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
     return (int)written;
 }
 
@@ -116,12 +116,12 @@ int doom_write_fn_impl(void* handle, const void *buf, int count) {
 //     unsigned nHandle = (unsigned int)(unsigned long long)handle;
 //     CString str;
 //     str.Format("DOOM called seek handle %u offset %d origin %d\n", nHandle, offset, origin);
-//     p_Serial->Write(str, strlen(str));
+//     // p_Serial->Write(str, strlen(str));
 
 //     int seekStatus = p_FileSystem->FileSeek(nHandle, offset, origin);
 
 //     str.Format("DOOM Position after seek: %d\n", p_FileSystem->FileTell(nHandle));
-//     p_Serial->Write(str, strlen(str));
+//     // p_Serial->Write(str, strlen(str));
 
 //     return seekStatus;
 // }
@@ -130,7 +130,7 @@ int doom_seek_fn_impl(void* handle, int offset, doom_seek_t origin) {
     unsigned nHandle = (unsigned int)(unsigned long long)handle;
     CString str;
     str.Format("DOOM called seek handle %u offset %d origin %d\n", nHandle, offset, origin);
-    //p_Serial->Write(str, strlen(str));
+    //// p_Serial->Write(str, strlen(str));
 
     switch(origin) {
         case 0: doomSeek = offset; break;
@@ -139,7 +139,7 @@ int doom_seek_fn_impl(void* handle, int offset, doom_seek_t origin) {
     }
 
     str.Format("DOOM Position after seek: %d\n", doomSeek);
-    //p_Serial->Write(str, strlen(str));
+    //// p_Serial->Write(str, strlen(str));
 
     return 0;
 }
@@ -148,7 +148,7 @@ int doom_seek_fn_impl(void* handle, int offset, doom_seek_t origin) {
 //     unsigned nHandle = (unsigned int)(unsigned long long)handle;
 //     CString str;
 //     str.Format("DOOM called tell handle %u\n", nHandle);
-//     p_Serial->Write(str, strlen(str));
+//     // p_Serial->Write(str, strlen(str));
 
 //     return (p_FileSystem->FileTell((unsigned long long)handle));
 // }
@@ -157,7 +157,7 @@ int doom_tell_fn_impl(void* handle) {
     unsigned nHandle = (unsigned int)(unsigned long long)handle;
     CString str;
     str.Format("DOOM called tell handle %u\n", nHandle);
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
 
     return doomSeek;
 }
@@ -166,7 +166,7 @@ int doom_tell_fn_impl(void* handle) {
 //     unsigned nHandle = (unsigned int)(unsigned long long)handle;
 //     CString str;
 //     str.Format("DOOM called eof handle %u\n", nHandle);
-//     p_Serial->Write(str, strlen(str));
+//     // p_Serial->Write(str, strlen(str));
 //     return (p_FileSystem->FileEOF((unsigned long long)handle));
 // }
 
@@ -174,7 +174,7 @@ int doom_eof_fn_impl(void* handle) {
     unsigned nHandle = (unsigned int)(unsigned long long)handle;
     CString str;
     str.Format("DOOM called eof handle %u\n", nHandle);
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
     return (doomSeek >= doomContentSize);
 }
 
@@ -188,13 +188,13 @@ void doom_gettime_fn_impl(int* sec, int* usec) {
 void doom_exit_fn_impl(int code) {
     CString str;
     str.Format("Exit now with exit code %d\n", code);
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
 }
 
 char* doom_getenv_fn_impl(const char* var) {
     CString str;
     str.Format("Retrieving ENV value for %s\n", var);
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
     return NULL;
 }
 
@@ -246,13 +246,13 @@ boolean CDoom::InitDoom() {
 
     CString str;
     str.Format("Read %d bytes from DOOM wad: ", readBytes);
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
 
 
     doom_init(argc, argv, 0);
 
     str.Format("Finished DOOM Load\n");
-    p_Serial->Write(str, strlen(str));
+    // p_Serial->Write(str, strlen(str));
 
     return 1;
 }
@@ -287,26 +287,36 @@ void CDoom::Update() {
             const u8* framebuffer = doom_get_framebuffer(4 /* RGBA */);
             
             // str.Format("Before SetArea\n");
-            // p_Serial->Write(str, strlen(str));
+            // // p_Serial->Write(str, strlen(str));
 
             // p_FrameBuffer->SetArea(area, framebuffer);
             unsigned int* fbp = (unsigned int*)framebuffer;
             for (int y=0; y < 200; y++) {
                 for (int x=0; x < 320; x++) {
-                    p_FrameBuffer->SetPixel((x << 1), (y << 1), *fbp);
-                    p_FrameBuffer->SetPixel((x << 1) | 1, (y << 1), *fbp);
-                    p_FrameBuffer->SetPixel((x << 1), (y << 1) | 1, *fbp);
-                    p_FrameBuffer->SetPixel((x << 1) | 1, (y << 1) | 1, *fbp);
-                    fbp++;
+                    // p_FrameBuffer->SetPixel((x << 1), (y << 1), *fbp);
+                    // p_FrameBuffer->SetPixel((x << 1) | 1, (y << 1), *fbp);
+                    // p_FrameBuffer->SetPixel((x << 1), (y << 1) | 1, *fbp);
+                    // p_FrameBuffer->SetPixel((x << 1) | 1, (y << 1) | 1, *fbp);
+
+                    // read hardware has some framebuffer issues ???
+                    // upscaling does not work
+                    // and it uses BGRA instead of RGBA
+
+                    unsigned int pixel = *fbp++;
+                    pixel = (pixel & 0xFF000000) |
+                            ((pixel & 0xFF) << 16) |
+                            (pixel & 0x0000FF00) |
+                            ((pixel >> 16) & 0xFF);
+                    p_FrameBuffer->SetPixel(x, y, pixel);
                 }
             }
             // p_FrameBuffer->SetPixel(0, 0, *(unsigned int*)framebuffer);
 
             // str.Format("After SetArea\n");
-            // p_Serial->Write(str, strlen(str));
+            // // p_Serial->Write(str, strlen(str));
             
             // str.Format("Finished displaying the framebuffer\n");
-            // p_Serial->Write(str, strlen(str));
+            // // p_Serial->Write(str, strlen(str));
         }
     }
 }
@@ -334,7 +344,7 @@ void CDoom::InterpretKeyboard(unsigned char ucModifiers, const unsigned char Raw
             }
             
             str.Format("Key down: %u\n", code);
-            p_Serial->Write(str, strlen(str));
+            // p_Serial->Write(str, strlen(str));
         } else if (keyCodesCurr[i] == 0 && keyCodesLast[i] == 1) {
             u16 code = keyMap->Translate(i, 0);
             if (code == 260) {
@@ -344,7 +354,7 @@ void CDoom::InterpretKeyboard(unsigned char ucModifiers, const unsigned char Raw
                 doom_key_up((doom_key_t)code);
             }
             str.Format("Key up: %u\n", code);
-            p_Serial->Write(str, strlen(str));
+            // p_Serial->Write(str, strlen(str));
         }
 
         keyCodesLast[i] = keyCodesCurr[i];

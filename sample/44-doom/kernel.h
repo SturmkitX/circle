@@ -35,6 +35,8 @@
 #include <circle/usb/usbhcidevice.h>
 #include <circle/usb/usbkeyboard.h>
 #include <SDCard/emmc.h>
+#include <circle/sound/soundbasedevice.h>
+#include <vc4/vchiq/vchiqdevice.h>
 
 enum TShutdownMode
 {
@@ -71,6 +73,8 @@ private:
 
 	CEMMCDevice		m_EMMC;
 	CFATFileSystem		m_FileSystem;
+	CVCHIQDevice		m_VCHIQ;
+	CSoundBaseDevice	*m_pSound;
 
 	void InitSD();
 	void InitUSB();
