@@ -2,7 +2,7 @@
 # Makefile
 #
 
-USE_VCHIQ_SOUND = 1
+USE_VCHIQ_SOUND = 0
 
 CIRCLEHOME = ../..
 

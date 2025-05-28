@@ -47,9 +47,13 @@ CKernel::CKernel (void)
 	m_Logger (m_Options.GetLogLevel (), &m_Timer),
 	m_USBHCI (&m_Interrupt, &m_Timer, TRUE),		// TRUE: enable plug-and-play
 	m_pKeyboard (0),
-	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED),
+	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED)
+
+	#ifdef USE_VCHIQ_SOUND
+	,
 	m_VCHIQ (CMemorySystem::Get (), &m_Interrupt),
 	m_pSound (0)
+	#endif
 {
 	m_ActLED.Blink (5);	// show we are alive
 }
@@ -103,10 +107,12 @@ boolean CKernel::Initialize (void)
 		bOK = m_EMMC.Initialize ();
 	}
 
+	#ifdef USE_VCHIQ_SOUND
 	if (bOK)
 	{
 		bOK = m_VCHIQ.Initialize ();
 	}
+	#endif
 	
 	return bOK;
 }
@@ -117,6 +123,7 @@ TShutdownMode CKernel::Run (void)
 
 	m_Logger.Write (FromKernel, LogNotice, "Please attach an USB keyboard, if not already done!");
 
+	#ifdef USE_VCHIQ_SOUND
 	m_pSound = new CVCHIQSoundBaseDevice (&m_VCHIQ, SAMPLE_RATE, CHUNK_SIZE,
 					(TVCHIQSoundDestination) m_Options.GetSoundOption ());
 
@@ -141,6 +148,8 @@ TShutdownMode CKernel::Run (void)
 
 	m_Logger.Write (FromKernel, LogNotice, "Playing DOOM Sounds");
 
+	#endif
+
 	// show the character set on screen
 	// for (char chChar = ' '; chChar <= '~'; chChar++)
 	// {
@@ -159,7 +168,6 @@ TShutdownMode CKernel::Run (void)
 	InitSD();
 	InitUSB();
 
-#ifndef NDEBUG
 	// some debugging features
 	// m_Logger.Write (FromKernel, LogDebug, "Dumping the start of the ATAGS");
 	// debug_hexdump ((void *) 0x100, 128, FromKernel);
@@ -175,7 +183,12 @@ TShutdownMode CKernel::Run (void)
 
 	boolean resize_status = m_Screen.Resize(320, 200);
 
-	CDoom doom(&m_Serial, &m_FileSystem, m_Screen.GetFrameBuffer(), m_pSound, &m_Scheduler);
+	CSoundBaseDevice* pSound = 0;
+	#ifdef USE_VCHIQ_SOUND
+	pSound = m_pSound;
+	#endif
+
+	CDoom doom(&m_Serial, &m_FileSystem, m_Screen.GetFrameBuffer(), pSound, &m_Scheduler);
 	p_Doom = &doom;
 	
 	boolean res = doom.InitDoom();
@@ -185,7 +198,6 @@ TShutdownMode CKernel::Run (void)
 
 	m_Logger.Write (FromKernel, LogNotice, "The following assertion will fail");
 	assert (1 == 2);
-#endif
 
 	return ShutdownHalt;
 }

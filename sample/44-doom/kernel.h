@@ -74,8 +74,12 @@ private:
 
 	CEMMCDevice		m_EMMC;
 	CFATFileSystem		m_FileSystem;
+
+	#ifdef USE_VCHIQ_SOUND
 	CVCHIQDevice		m_VCHIQ;
 	CSoundBaseDevice	*m_pSound;
+	#endif
+	
 	CScheduler		m_Scheduler;
 
 	void InitSD();

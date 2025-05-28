@@ -20,7 +20,7 @@ u8 keyCodesLast[128];
 u8 keyCodesCurr[128];
 
 void doom_print_fn_impl(const char* str) {
-    // p_Serial->Write(str, strlen(str));
+    p_Serial->Write(str, strlen(str));
 }
 
 void* doom_malloc_fn_impl(int size) {
@@ -235,11 +235,14 @@ boolean CDoom::InitDoom() {
     doom_set_default_int("key_fire",         DOOM_KEY_R);
     doom_set_default_int("mouse_move",      0); // Mouse will not move forward
 
-    char* argv[] = {
+    char* argv[5] = {
         "doom.exe",
-        "doom1.wad"
+        "doom1.wad",
+        "-net",
+        "1",
+        "192.168.54.11"
     };
-    int argc = 2;
+    int argc = 5;
 
     // read DOOM wad content
     doomContent = (char*)malloc(doomContentSize);
@@ -275,27 +278,28 @@ void CDoom::Update() {
         doom_update();
 
         if ((curr_time - render_time) >= renderDelayTime) {
-            const u8* framebuffer = doom_get_framebuffer(4 /* RGBA */);
+            // const u8* framebuffer = doom_get_framebuffer(4 /* RGBA */);
             
-            unsigned int* fbp = (unsigned int*)framebuffer;
-            for (int y=0; y < 200; y++) {
-                for (int x=0; x < 320; x++) {
-                    // read hardware has some framebuffer issues ???
-                    // upscaling does not work
-                    // and it uses BGRA instead of RGBA
+            // unsigned int* fbp = (unsigned int*)framebuffer;
+            // for (int y=0; y < 200; y++) {
+            //     for (int x=0; x < 320; x++) {
+            //         // read hardware has some framebuffer issues ???
+            //         // upscaling does not work
+            //         // and it uses BGRA instead of RGBA
 
-                    unsigned int pixel = *fbp++;
-                    pixel = (pixel & 0xFF000000) |
-                            ((pixel & 0xFF) << 16) |
-                            (pixel & 0x0000FF00) |
-                            ((pixel >> 16) & 0xFF);
-                    p_FrameBuffer->SetPixel(x, y, pixel);
-                }
-            }
+            //         unsigned int pixel = *fbp++;
+            //         pixel = (pixel & 0xFF000000) |
+            //                 ((pixel & 0xFF) << 16) |
+            //                 (pixel & 0x0000FF00) |
+            //                 ((pixel >> 16) & 0xFF);
+            //         p_FrameBuffer->SetPixel(x, y, pixel);
+            //     }
+            // }
             
             render_time = curr_time;
         }
 
+        #ifdef USE_VCHIQ_SOUND
         if (curr_time - sound_time >= soundDelayTime) {
             short* buffer = doom_get_sound_buffer();
             unsigned nQueueSizeFrames = p_Sound->GetQueueSizeFrames ();
@@ -313,6 +317,7 @@ void CDoom::Update() {
             WriteSoundData (buffer, nQueueSizeFrames - p_Sound->GetQueueFramesAvail ());
             sound_time = curr_time;
         }
+        #endif
     }
 }
 
@@ -358,6 +363,7 @@ void CDoom::InterpretKeyboard(unsigned char ucModifiers, const unsigned char Raw
 
 void CDoom::WriteSoundData (short* buffer, unsigned nFrames)
 {
+    #ifdef USE_VCHIQ_SOUND
 	const unsigned nFramesPerWrite = 1000;
 
 	while (nFrames > 0)
@@ -375,4 +381,5 @@ void CDoom::WriteSoundData (short* buffer, unsigned nFrames)
 
 		p_Scheduler->Yield ();		// ensure the VCHIQ tasks can run
 	}
+    #endif
 }

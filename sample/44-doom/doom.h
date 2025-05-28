@@ -11,6 +11,7 @@
 
 #include "PureDOOM/src/DOOM/DOOM.h"
 
+#ifdef USE_VCHIQ_SOUND
 #define SAMPLE_RATE 11025
 #define CHUNK_SIZE	1024	// 512 frames, 16 bits, 2 channels
 #define WRITE_FORMAT	1		// 0: 8-bit unsigned, 1: 16-bit signed, 2: 24-bit signed
@@ -36,6 +37,8 @@
 	#define TYPE_SIZE	(sizeof (u8)*3)
 	#define FACTOR		((1 << 23)-1)
 	#define NULL_LEVEL	0
+#endif
+
 #endif
 
 class CDoom {
