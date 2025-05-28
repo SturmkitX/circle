@@ -38,10 +38,11 @@
 #define IPPORT_USERRESERVED 5000
 #pragma comment(lib, "ws2_32.lib")
 #else
- #include <sys/socket.h>
- #include <netinet/in.h>
- #include <arpa/inet.h>
- #include <sys/ioctl.h>
+//  #include <sys/socket.h>
+//  #include <netinet/in.h>
+//  #include <arpa/inet.h>
+//  #include <sys/ioctl.h>
+#define IPPORT_USERRESERVED 5000
 #define SOCKET int
 #endif
 #else
@@ -104,13 +105,13 @@ SOCKET UDPsocket(void)
     SOCKET s;
 
     // allocate a socket
-    s = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    s = doom_socket();
     if (s < 0)
     {
         //I_Error("Error: can't create socket: %s", strerror(errno));
         
         doom_strcpy(error_buf, "Error: can't create socket: ");
-        doom_concat(error_buf, strerror(errno));
+        // doom_concat(error_buf, strerror(errno));
         I_Error(error_buf);
     }
 
@@ -125,23 +126,27 @@ SOCKET UDPsocket(void)
 #if defined(I_NET_ENABLED)
 void BindToLocalPort(SOCKET s, int port)
 {
-    int v;
-    struct sockaddr_in address;
+    doom_strcpy(error_buf, "Error: Binding not supported! Skipping... ");
+    I_Error(error_buf);
 
-    doom_memset(&address, 0, sizeof(address));
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = port;
+    // Binding not implemented for UDP
+    // int v;
+    // struct sockaddr_in address;
 
-    v = bind(s, (void*)&address, sizeof(address));
-    if (v == -1)
-    {
-        //I_Error("Error: BindToPort: bind: %s", strerror(errno));
+    // doom_memset(&address, 0, sizeof(address));
+    // address.sin_family = AF_INET;
+    // address.sin_addr.s_addr = INADDR_ANY;
+    // address.sin_port = port;
+
+    // v = bind(s, (void*)&address, sizeof(address));
+    // if (v == -1)
+    // {
+    //     //I_Error("Error: BindToPort: bind: %s", strerror(errno));
         
-        doom_strcpy(error_buf, "Error: BindToPort: bind: ");
-        doom_concat(error_buf, strerror(errno));
-        I_Error(error_buf);
-    }
+    //     doom_strcpy(error_buf, "Error: BindToPort: bind: ");
+    //     doom_concat(error_buf, strerror(errno));
+    //     I_Error(error_buf);
+    // }
 }
 #endif
 
@@ -172,7 +177,7 @@ void PacketSend(void)
     }
 
     //doom_print ("sending %i\n",gametic);                
-    c = sendto(sendsocket, (const char*)&sw, doomcom->datalength
+    c = doom_sendto(sendsocket, (const char*)&sw, doomcom->datalength
                , 0, (void*)&sendaddress[doomcom->remotenode]
                , sizeof(sendaddress[doomcom->remotenode]));
 #endif
@@ -196,7 +201,7 @@ void PacketGet(void)
     doomdata_t sw;
 
     fromlen = sizeof(fromaddress);
-    c = recvfrom(insocket, (char*)&sw, sizeof(sw), 0
+    c = doom_recvfrom(insocket, (char*)&sw, sizeof(sw), 0
                  , (struct sockaddr*)&fromaddress, &fromlen);
     if (c == -1)
     {
@@ -211,14 +216,14 @@ void PacketGet(void)
             I_Error(error_buf);
         }
 #else
-        if (errno != EWOULDBLOCK)
-        {
-            //I_Error("Error: GetPacket: %s", strerror(errno));
+        // if (errno != EWOULDBLOCK)
+        // {
+        //     //I_Error("Error: GetPacket: %s", strerror(errno));
             
-            doom_strcpy(error_buf, "Error: GetPacket: ");
-            doom_concat(error_buf, strerror(errno));
-            I_Error(error_buf);
-        }
+        //     doom_strcpy(error_buf, "Error: GetPacket: ");
+        //     doom_concat(error_buf, strerror(errno));
+        //     I_Error(error_buf);
+        // }
 #endif
         doomcom->remotenode = -1;                // no packet
         return;
@@ -278,28 +283,31 @@ void PacketGet(void)
 int GetLocalAddress(void)
 {
 #if defined(I_NET_ENABLED)
-    char hostname[1024];
-    struct hostent* hostentry; // host information entry
-    int v;
+    // char hostname[1024];
+    // struct hostent* hostentry; // host information entry
+    // int v;
 
-    // get local address
-    v = gethostname(hostname, sizeof(hostname));
-    if (v == -1)
-    {
-        //I_Error("Error: GetLocalAddress : gethostname: errno %d", errno);
+    // // get local address
+    // v = gethostname(hostname, sizeof(hostname));
+    // if (v == -1)
+    // {
+    //     //I_Error("Error: GetLocalAddress : gethostname: errno %d", errno);
         
-        doom_strcpy(error_buf, "Error: GetLocalAddress : gethostname: errno ");
-        doom_concat(error_buf, strerror(errno));
-        I_Error(error_buf);
-    }
+    //     doom_strcpy(error_buf, "Error: GetLocalAddress : gethostname: errno ");
+    //     doom_concat(error_buf, strerror(errno));
+    //     I_Error(error_buf);
+    // }
 
-    hostentry = gethostbyname(hostname);
-    if (!hostentry)
-    {
-        I_Error("Error: GetLocalAddress : gethostbyname: couldn't get local host");
-    }
+    // hostentry = gethostbyname(hostname);
+    // if (!hostentry)
+    // {
+    //     I_Error("Error: GetLocalAddress : gethostbyname: couldn't get local host");
+    // }
 
-    return *(int*)hostentry->h_addr_list[0];
+    // return *(int*)hostentry->h_addr_list[0];
+
+    char myIp[] = "192.168.54.10";
+    return *(int*)myIp;
 #else
     return 0;
 #endif
@@ -397,22 +405,24 @@ void I_InitNetwork(void)
         sendaddress[doomcom->numnodes].sin_port = htons(DOOMPORT);
         if (myargv[i][0] == '.')
         {
-            sendaddress[doomcom->numnodes].sin_addr.s_addr
-                = inet_addr(myargv[i] + 1);
+            // sendaddress[doomcom->numnodes].sin_addr.s_addr
+            //     = inet_addr(myargv[i] + 1);
         }
         else
         {
-            hostentry = gethostbyname(myargv[i]);
-            if (!hostentry)
-            {
-                //I_Error("Error: gethostbyname: couldn't find %s", myargv[i]);
+            // hostentry = gethostbyname(myargv[i]);
+            // if (!hostentry)
+            // {
+            //     //I_Error("Error: gethostbyname: couldn't find %s", myargv[i]);
                 
-                doom_strcpy(error_buf, "Error: gethostbyname: couldn't find ");
-                doom_concat(error_buf, myargv[i]);
-                I_Error(error_buf);
-            }
+            //     doom_strcpy(error_buf, "Error: gethostbyname: couldn't find ");
+            //     doom_concat(error_buf, myargv[i]);
+            //     I_Error(error_buf);
+            // }
+            // sendaddress[doomcom->numnodes].sin_addr.s_addr
+            //     = *(int*)hostentry->h_addr_list[0];
             sendaddress[doomcom->numnodes].sin_addr.s_addr
-                = *(int*)hostentry->h_addr_list[0];
+                = *(int*)myargv[i];
         }
         doomcom->numnodes++;
     }
@@ -425,8 +435,8 @@ void I_InitNetwork(void)
     BindToLocalPort(insocket, htons(DOOMPORT));
 #if defined(DOOM_WIN32)
     ioctlsocket(insocket, FIONBIO, &trueval);
-#else
-    ioctl(insocket, FIONBIO, &trueval);
+// #else
+//     ioctl(insocket, FIONBIO, &trueval);
 #endif
 
     sendsocket = UDPsocket();

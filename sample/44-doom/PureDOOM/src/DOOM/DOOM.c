@@ -45,6 +45,10 @@ doom_gettime_fn doom_gettime = 0;
 doom_exit_fn doom_exit = 0;
 doom_getenv_fn doom_getenv = 0;
 
+doom_socket_fn doom_socket = 0;
+doom_sendto_fn doom_sendto = 0;
+doom_recvfrom_fn doom_recvfrom = 0;
+
 
 void D_DoomLoop(void);
 void D_UpdateWipe(void);
@@ -135,6 +139,18 @@ int doom_eof_impl(void* handle)
     return 1;
 }
 #endif
+
+int doom_socket_impl() {
+    return -1;
+}
+
+int doom_sendto_impl(int sockfd, const void *buf, int len, int flags, const struct sockaddr *dest_addr, int addrlen) {
+    return -1;
+}
+
+int doom_recvfrom_impl(int sockfd, void *buf, int len, int flags, struct sockaddr *src_addr, int *addrlen) {
+    return -1;
+}
 
 
 #if defined(DOOM_IMPLEMENT_GETTIME)
@@ -537,6 +553,18 @@ void doom_set_getenv(doom_getenv_fn getenv_fn)
     doom_getenv = getenv_fn;
 }
 
+void doom_set_socket(doom_socket_fn socket_fn) {
+    doom_socket = socket_fn;
+}
+
+void doom_set_sendto(doom_sendto_fn sendto_fn) {
+    doom_sendto = sendto_fn;
+}
+
+void doom_set_recvfrom(doom_recvfrom_fn recvfrom_fn) {
+    doom_recvfrom = recvfrom_fn;
+}
+
 
 void doom_init(int argc, char** argv, int flags)
 {
@@ -553,6 +581,12 @@ void doom_init(int argc, char** argv, int flags)
     if (!doom_gettime) doom_gettime = doom_gettime_impl;
     if (!doom_exit) doom_exit = doom_exit_impl;
     if (!doom_getenv) doom_getenv = doom_getenv_impl;
+
+    #ifdef I_NET_ENABLED
+    if (!doom_socket) doom_socket = doom_socket_impl;
+    if (!doom_sendto) doom_sendto = doom_sendto_impl;
+    if (!doom_recvfrom) doom_recvfrom = doom_recvfrom_impl;
+    #endif
 
     screen_buffer = doom_malloc(SCREENWIDTH * SCREENHEIGHT);
     final_screen_buffer = doom_malloc(SCREENWIDTH * SCREENHEIGHT * 4);

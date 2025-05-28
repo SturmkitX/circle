@@ -22,6 +22,7 @@
 #ifndef __I_NET__
 #define __I_NET__
 
+#include "net_base.h"
 
 // Called by D_DoomMain.
 

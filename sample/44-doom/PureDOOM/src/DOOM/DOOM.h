@@ -32,6 +32,7 @@
 #ifndef __DOOM_H__
 #define __DOOM_H__
 
+#include "net_base.h"
 
 // Sample rate of sound samples from doom
 #define DOOM_SAMPLERATE 11025
@@ -75,6 +76,10 @@ typedef int(*doom_eof_fn)(void* handle);
 typedef void(*doom_gettime_fn)(int* sec, int* usec);
 typedef void(*doom_exit_fn)(int code);
 typedef char*(*doom_getenv_fn)(const char* var);
+
+typedef int(*doom_socket_fn)();     // always returns a UDP socket
+typedef int(*doom_sendto_fn)(int sockfd, const void *buf, int len, int flags, const struct sockaddr *dest_addr, int addrlen);
+typedef int(*doom_recvfrom_fn)(int sockfd, void *buf, int len, int flags, struct sockaddr *src_addr, int *addrlen);
 
 
 // Doom key mapping
@@ -184,6 +189,10 @@ void doom_set_file_io(doom_open_fn open_fn,
 void doom_set_gettime(doom_gettime_fn gettime_fn);
 void doom_set_exit(doom_exit_fn exit_fn);
 void doom_set_getenv(doom_getenv_fn getenv_fn);
+
+void doom_set_socket(doom_socket_fn socket_fn);
+void doom_set_sendto(doom_sendto_fn sendto_fn);
+void doom_set_recvfrom(doom_recvfrom_fn recvfrom_fn);
 
 // Initializes DOOM and start things up. Call only call one
 void doom_init(int argc, char** argv, int flags);

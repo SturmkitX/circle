@@ -86,6 +86,8 @@ LIBS	+= $(CIRCLEHOME)/addon/vc4/sound/libvchiqsound.a \
 CFLAGS += -DUSE_VCHIQ_SOUND=$(USE_VCHIQ_SOUND)
 endif
 
+CFLAGS += -DI_NET_ENABLED=1
+
 include ../Rules.mk
 
 -include $(DEPS)
