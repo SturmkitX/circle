@@ -76,7 +76,8 @@ LIBS	= $(CIRCLEHOME)/lib/libcircle.a \
 		$(CIRCLEHOME)/lib/input/libinput.a \
 		$(CIRCLEHOME)/lib/usb/libusb.a \
 		$(CIRCLEHOME)/lib/sched/libsched.a \
-	   $(CIRCLEHOME)/lib/sound/libsound.a
+	   $(CIRCLEHOME)/lib/sound/libsound.a \
+	   $(CIRCLEHOME)/lib/net/libnet.a
 
 ifeq ($(strip $(USE_VCHIQ_SOUND)),1)
 LIBS	+= $(CIRCLEHOME)/addon/vc4/sound/libvchiqsound.a \

@@ -34,6 +34,16 @@
 #define PARTITION	"emmc1-1"
 #define FILENAME	"circle.txt"
 
+// Network configuration
+// #define USE_DHCP
+
+#ifndef USE_DHCP
+static const u8 IPAddress[]      = {192, 168, 0, 250};
+static const u8 NetMask[]        = {255, 255, 255, 0};
+static const u8 DefaultGateway[] = {192, 168, 0, 1};
+static const u8 DNSServer[]      = {192, 168, 0, 1};
+#endif
+
 static const char FromKernel[] = "kernel";
 static CSerialDevice* p_Serial;
 static CDoom *p_Doom;
@@ -53,6 +63,9 @@ CKernel::CKernel (void)
 	,
 	m_VCHIQ (CMemorySystem::Get (), &m_Interrupt),
 	m_pSound (0)
+	#endif
+	#ifndef USE_DHCP
+	, m_Net (IPAddress, NetMask, DefaultGateway, DNSServer)
 	#endif
 {
 	m_ActLED.Blink (5);	// show we are alive
@@ -113,6 +126,11 @@ boolean CKernel::Initialize (void)
 		bOK = m_VCHIQ.Initialize ();
 	}
 	#endif
+
+	if (bOK)
+	{
+		bOK = m_Net.Initialize ();
+	}
 	
 	return bOK;
 }
@@ -188,7 +206,7 @@ TShutdownMode CKernel::Run (void)
 	pSound = m_pSound;
 	#endif
 
-	CDoom doom(&m_Serial, &m_FileSystem, m_Screen.GetFrameBuffer(), pSound, &m_Scheduler);
+	CDoom doom(&m_Serial, &m_FileSystem, m_Screen.GetFrameBuffer(), pSound, &m_Scheduler, &m_Net);
 	p_Doom = &doom;
 	
 	boolean res = doom.InitDoom();

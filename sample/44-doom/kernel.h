@@ -38,6 +38,7 @@
 #include <circle/sound/soundbasedevice.h>
 #include <vc4/vchiq/vchiqdevice.h>
 #include <circle/sched/scheduler.h>
+#include <circle/net/netsubsystem.h>
 
 enum TShutdownMode
 {
@@ -81,6 +82,7 @@ private:
 	#endif
 	
 	CScheduler		m_Scheduler;
+	CNetSubSystem		m_Net;
 
 	void InitSD();
 	void InitUSB();

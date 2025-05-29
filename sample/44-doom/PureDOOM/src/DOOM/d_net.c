@@ -637,10 +637,14 @@ void D_CheckNetGame(void)
         resendto[i] = 0;                // which tic to start sending
     }
 
+    doom_print("Before I_InitNetwork\n");
+
     // I_InitNetwork sets doomcom and netgame
     I_InitNetwork();
     if (doomcom->id != DOOMCOM_ID)
         I_Error("Error: Doomcom buffer invalid!");
+
+    doom_print("After I_InitNetwork\n");
 
     netbuffer = &doomcom->data;
     consoleplayer = displayplayer = doomcom->consoleplayer;

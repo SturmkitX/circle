@@ -4,6 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <circle/timer.h>
+#include <circle/net/socket.h>
+#include <circle/net/in.h>
+#include <circle/net/ipaddress.h>
+
+#define MAX_NUM_SOCKETS 10
 
 
 CSerialDevice *p_Serial;
@@ -11,6 +16,10 @@ CFATFileSystem *p_FileSystem;
 CBcmFrameBuffer *p_FrameBuffer;
 CSoundBaseDevice	*p_Sound;
 CScheduler  *p_Scheduler;
+CNetSubSystem *p_Net;
+
+CSocket* sockets[MAX_NUM_SOCKETS];
+int num_sockets = 0;
 
 char *doomContent;
 int doomSeek = 0;
@@ -199,13 +208,36 @@ char* doom_getenv_fn_impl(const char* var) {
     return NULL;
 }
 
+int doom_socket_fn_impl() {
+    if (num_sockets >= MAX_NUM_SOCKETS) {
+        return -1;
+    }
 
-CDoom::CDoom(CSerialDevice* serial, CFATFileSystem* fatfs, CBcmFrameBuffer* fb, CSoundBaseDevice *m_pSound, CScheduler* sched) {
+    CSocket *sock = new CSocket(p_Net, IPPROTO_UDP);
+    if (!sock) {
+        return -1;
+    }
+
+    int curr_index = num_sockets++;
+    sockets[curr_index] = sock;
+    return curr_index;
+}
+
+int doom_sendto_fn_impl(int sockfd, const void *buf, int len, int flags, const struct sockaddr *dest_addr, int addrlen) {
+    return -1;
+}
+
+int doom_recvfrom_fn_impl(int sockfd, void *buf, int len, int flags, struct sockaddr *src_addr, int *addrlen) {
+    return -1;
+}
+
+CDoom::CDoom(CSerialDevice* serial, CFATFileSystem* fatfs, CBcmFrameBuffer* fb, CSoundBaseDevice *m_pSound, CScheduler* sched, CNetSubSystem* nets) {
     p_Serial = serial;
     p_FileSystem = fatfs;
     p_FrameBuffer = fb;
     p_Sound = m_pSound;
     p_Scheduler = sched;
+    p_Net = nets;
 }
 
 CDoom::~CDoom() {
@@ -225,6 +257,10 @@ boolean CDoom::InitDoom() {
     doom_set_gettime(doom_gettime_fn_impl);
     doom_set_exit(doom_exit_fn_impl);
     doom_set_getenv(doom_getenv_fn_impl);
+
+    doom_set_socket(doom_socket_fn_impl);
+    doom_set_sendto(doom_sendto_fn_impl);
+    doom_set_recvfrom(doom_recvfrom_fn_impl);
 
     // Change default bindings to modern mapping
     doom_set_default_int("key_up",          DOOM_KEY_W);

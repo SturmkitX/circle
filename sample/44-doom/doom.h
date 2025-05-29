@@ -8,6 +8,7 @@
 #include <circle/input/keymap.h>
 #include <circle/sound/soundbasedevice.h>
 #include <circle/sched/scheduler.h>
+#include <circle/net/netsubsystem.h>
 
 #include "PureDOOM/src/DOOM/DOOM.h"
 
@@ -43,7 +44,7 @@
 
 class CDoom {
 public:
-    CDoom(CSerialDevice*, CFATFileSystem*, CBcmFrameBuffer*, CSoundBaseDevice*, CScheduler*);
+    CDoom(CSerialDevice*, CFATFileSystem*, CBcmFrameBuffer*, CSoundBaseDevice*, CScheduler*, CNetSubSystem*);
     ~CDoom();
 
     boolean InitDoom();

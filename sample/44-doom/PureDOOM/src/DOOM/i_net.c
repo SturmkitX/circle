@@ -56,6 +56,10 @@
 #include "doomstat.h"
 #include "i_net.h"
 
+extern doom_socket_fn doom_socket;
+extern doom_sendto_fn doom_sendto;
+extern doom_recvfrom_fn doom_recvfrom;
+
 
 // For some odd reason...
 #if !defined(DOOM_APPLE) // It doesn't complain on Win32? O_o
@@ -126,8 +130,10 @@ SOCKET UDPsocket(void)
 #if defined(I_NET_ENABLED)
 void BindToLocalPort(SOCKET s, int port)
 {
-    doom_strcpy(error_buf, "Error: Binding not supported! Skipping... ");
-    I_Error(error_buf);
+    // doom_strcpy(error_buf, "Error: Binding not supported! Skipping... ");
+    // I_Error(error_buf);
+
+    doom_bind(s, port);
 
     // Binding not implemented for UDP
     // int v;
@@ -306,7 +312,7 @@ int GetLocalAddress(void)
 
     // return *(int*)hostentry->h_addr_list[0];
 
-    char myIp[] = "192.168.54.10";
+    char myIp[] = {192, 168, 54, 10};
     return *(int*)myIp;
 #else
     return 0;
@@ -389,6 +395,7 @@ void I_InitNetwork(void)
     }
 
 #if defined(I_NET_ENABLED)
+    doom_print("Found param -net\n");
     netsend = PacketSend;
     netget = PacketGet;
     netgame = true;
@@ -430,9 +437,13 @@ void I_InitNetwork(void)
     doomcom->id = DOOMCOM_ID;
     doomcom->numplayers = doomcom->numnodes;
 
+    doom_print("Before first UDPSocket\n");
+
     // build message to receive
     insocket = UDPsocket();
     BindToLocalPort(insocket, htons(DOOMPORT));
+
+    doom_print("After first UDPSocket and empty Bind\n");
 #if defined(DOOM_WIN32)
     ioctlsocket(insocket, FIONBIO, &trueval);
 // #else
